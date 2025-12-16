@@ -1,0 +1,23 @@
+compilation_database_dir: ../build/.qtc_clangd/
+output_directory: diagrams
+diagrams:
+  class_diagram:
+    type: class
+    glob:
+      - ./src/scheduler-plus-plus.cpp
+      - ./src/scheduler-plus-plus.hpp
+    using_namespace: scheduler
+    include:
+      namespaces:
+        - scheduler
+  sequence_diagram:
+    type: sequence
+    glob:
+      - ./src/scheduler-plus-plus.cpp
+      - ./src/scheduler-plus-plus.hpp
+    using_namespace: scheduler
+    include:
+      namespaces:
+        - scheduler
+    from:
+      - function: "scheduler::Scheduler::scheduleTask(std::unique_ptr<ITask>)"
