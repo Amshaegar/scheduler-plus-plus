@@ -8,15 +8,21 @@
 
 class TestTask : public scheduler::ITask {
 public:
+    TestTask() = default;
     TestTask(std::chrono::time_point<std::chrono::high_resolution_clock> time, const std::string& name);
     virtual ~TestTask(){}
 
     void execute() override;
+    void setExecutionTime(std::chrono::time_point<std::chrono::high_resolution_clock> time) override;
     std::chrono::time_point<std::chrono::high_resolution_clock> executionTime() override;
+    void setName(const std::string& name) override;
     std::string name() const override;
+    void setId(long id) override;
+    long id() const override;
 
     static std::map<std::string, bool> isExecuted;
 private:
     std::chrono::time_point<std::chrono::high_resolution_clock> m_executionTime;
     std::string m_name;
+    long m_id;
 };

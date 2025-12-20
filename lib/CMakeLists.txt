@@ -4,6 +4,8 @@ cmake_minimum_required (VERSION 3.15)
 
 project(scheduler-plus-plus CXX)
 
+find_package(SQLite3 REQUIRED)
+
 add_library(scheduler-plus-plus STATIC
     src/DefaultTimeProvider.cpp
     src/DefaultTimeProvider.hpp
@@ -16,6 +18,7 @@ target_include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
+target_link_libraries(scheduler-plus-plus PRIVATE SQLite::SQLite3)
 target_link_libraries(scheduler-plus-plus PRIVATE gtest)
 target_compile_features(scheduler-plus-plus PUBLIC cxx_std_20)
 set_target_properties(scheduler-plus-plus PROPERTIES CXX_STANDARD_REQUIRED ON)

@@ -4,6 +4,8 @@ cmake_minimum_required (VERSION 3.15)
 
 project(scheduler-plus-plus_tests CXX)
 
+find_package(SQLite3 REQUIRED)
+
 include(FetchContent)
 FetchContent_Declare(
   googletest
@@ -27,6 +29,7 @@ target_include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/../lib/src"
 )
 
+target_link_libraries(scheduler-plus-plus_tests PRIVATE SQLite::SQLite3)
 target_link_libraries(scheduler-plus-plus_tests PRIVATE gtest)
 target_link_libraries(scheduler-plus-plus_tests PUBLIC scheduler-plus-plus)
 target_compile_features(scheduler-plus-plus_tests PUBLIC cxx_std_20)

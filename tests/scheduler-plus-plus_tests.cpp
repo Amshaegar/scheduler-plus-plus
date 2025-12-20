@@ -16,6 +16,8 @@ protected:
     void TearDown() override {
         TestTask::isExecuted.clear();
     }
+
+    std::map<std::string,std::function<ITask*()>> tasksRegistry;
 };
 
 TEST_F(SchedulerTest, ExecuteNow) {
@@ -24,7 +26,7 @@ TEST_F(SchedulerTest, ExecuteNow) {
     TestTimeProvider::time = nowTime;
     std::string taskName = "TestTask";
     TestTask::isExecuted[taskName] = false;
-    Scheduler scheduler = Scheduler(std::make_unique<TestTimeProvider>());
+    Scheduler scheduler = Scheduler(":memmory:", tasksRegistry, std::make_unique<TestTimeProvider>());
 
     // Act
     scheduler.scheduleTask(std::make_unique<TestTask>(nowTime, taskName));
@@ -40,7 +42,7 @@ TEST_F(SchedulerTest, ExecuteInSpecificTime) {
     auto nowTime = std::chrono::high_resolution_clock::now();
     auto taskExecutionTime = nowTime + 5min;
     TestTimeProvider::time = nowTime;
-    Scheduler scheduler = Scheduler(std::make_unique<TestTimeProvider>());
+    Scheduler scheduler = Scheduler(":memmory:", tasksRegistry, std::make_unique<TestTimeProvider>());
     scheduler.scheduleTask(std::make_unique<TestTask>(taskExecutionTime, taskName));
     EXPECT_FALSE(TestTask::isExecuted.at(taskName));
     TestTimeProvider::time = taskExecutionTime + 1min;
@@ -61,7 +63,7 @@ TEST_F(SchedulerTest, SortedTasksQueue) {
                                                                                            {nowTime + 6min}};
     std::vector<std::chrono::time_point<std::chrono::high_resolution_clock>> actualTimes;
     std::string taskName = "TestTask";
-    Scheduler scheduler = Scheduler(std::make_unique<TestTimeProvider>());
+    Scheduler scheduler = Scheduler(":memmory:", tasksRegistry, std::make_unique<TestTimeProvider>());
 
     // Act
     scheduler.scheduleTask(std::make_unique<TestTask>(nowTime + 5min, taskName));
@@ -83,7 +85,7 @@ TEST_F(SchedulerTest, AllScheduledTasksAreExecuted) {
     TestTask::isExecuted["TestTask1"] = false;
     TestTask::isExecuted["TestTask2"] = false;
     TestTask::isExecuted["TestTask3"] = false;
-    Scheduler scheduler = Scheduler(std::make_unique<TestTimeProvider>());
+    Scheduler scheduler = Scheduler(":memmory:", tasksRegistry, std::make_unique<TestTimeProvider>());
     scheduler.scheduleTask(std::make_unique<TestTask>(nowTime, "TestTask0"));
     scheduler.scheduleTask(std::make_unique<TestTask>(nowTime + 5min, "TestTask1"));
     scheduler.scheduleTask(std::make_unique<TestTask>(nowTime + 1min, "TestTask2"));
@@ -98,6 +100,30 @@ TEST_F(SchedulerTest, AllScheduledTasksAreExecuted) {
     EXPECT_TRUE(TestTask::isExecuted.at("TestTask1"));
     EXPECT_TRUE(TestTask::isExecuted.at("TestTask2"));
     EXPECT_TRUE(TestTask::isExecuted.at("TestTask3"));
+}
+
+TEST_F(SchedulerTest, PersistTasks) {
+    // TODO add check of task execution time after scheduler recreate
+    // TODO add check tasks list after scheduler recreate
+    // Arrange
+    std::string taskName = "TestTask";
+    tasksRegistry[taskName] = [](){return new TestTask();}; // TODO move to fixture
+    TestTask::isExecuted[taskName] = false;
+    auto nowTime = std::chrono::high_resolution_clock::now();
+    auto taskExecutionTime = nowTime + 5min;
+    TestTimeProvider::time = nowTime;
+    Scheduler* schedulerBefore = new Scheduler("scheduler.db", tasksRegistry, std::make_unique<TestTimeProvider>());
+    schedulerBefore->scheduleTask(std::make_unique<TestTask>(taskExecutionTime, taskName));
+    EXPECT_FALSE(TestTask::isExecuted.at(taskName));
+    delete schedulerBefore;
+    TestTimeProvider::time = taskExecutionTime + 1min;
+
+    // Act
+    Scheduler* schedulerAfter = new Scheduler("scheduler.db", tasksRegistry, std::make_unique<TestTimeProvider>());
+
+    // Assert
+    delete schedulerAfter;
+    EXPECT_TRUE(TestTask::isExecuted.at(taskName));
 }
 
 } // namespace scheduler
